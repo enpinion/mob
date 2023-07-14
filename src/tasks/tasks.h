@@ -266,13 +266,9 @@ public:
 	{
 		noflags  = 0x00,
 
-		// gamebryo project, used by the translations task because these
-		// projects have multiple .ts files that have to be merged
-		gamebryo = 0x01,
-
 		// project that uses nuget, cmake doesn't support those right now, so
 		// `msbuild -t:restore` has to be run manually
-		nuget   = 0x02,
+		nuget   = 0x01,
 	};
 
 	// some mo tasks have more than one name, mostly because the transifex slugs
@@ -282,11 +278,6 @@ public:
 	modorganizer(std::string name, flags f=noflags);
 	modorganizer(std::vector<std::string> names, flags f=noflags);
 	modorganizer(std::vector<const char*> names, flags f=noflags);
-
-
-	// whether this project has the gamebryo flag on
-	//
-	bool is_gamebryo_plugin() const;
 
 	// whether this project has the nuget flag on
 	//
@@ -692,13 +683,6 @@ public:
 		// duplicate warnings
 		std::set<fs::path> warned_;
 
-
-		// whether the given project name is a gamebryo task, `dir` is just for
-		// logging
-		//
-		bool is_gamebryo_plugin(
-			const std::string& dir, const std::string& project);
-
 		// parses the directory name, walks all the .ts files, returns a project
 		// object for them
 		//
@@ -708,7 +692,7 @@ public:
 		// but might contain more if it's a gamebryo plugin
 		//
 		lang create_lang(
-			bool gamebryo, const std::string& project_name,
+			const std::string& project_name,
 			const fs::path& main_ts_file);
 	};
 
