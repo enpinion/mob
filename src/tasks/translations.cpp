@@ -314,6 +314,7 @@ void translations::do_build_and_install()
 			continue;
 
 		project_to_extension[p.path().filename().string()] = p.path().filename();
+		project_to_extension[mob::replace_all(p.path().filename().string(), "-", "_")] = p.path().filename();
 
 		const auto s_projects = conf().translation().get(p.path().filename().string(), "");
 		if (!s_projects.empty()) {
@@ -348,6 +349,7 @@ void translations::do_build_and_install()
 		// for each language
 		for (auto& lg : p.langs)
 		{
+			op::create_directories(cx(), dest / lg.name);
 			// add a functor that will run lrelease
 			v.push_back({lg.name + "." + p.name, [=]
 			{
@@ -355,7 +357,7 @@ void translations::do_build_and_install()
 				run_tool(lrelease()
 					.project(p.name)
 					.sources(lg.ts_files)
-					.out(dest));
+					.out(dest / lg.name));
 			}});
 		}
 	}
@@ -388,7 +390,8 @@ void translations::copy_builtin_qt_translations(
 		if (!fs::exists(src))
 			return false;
 
-		op::copy_file_to_dir_if_better(cx(), src, dest, op::unsafe);
+		op::create_directories(cx(), dest / lang);
+		op::copy_file_to_dir_if_better(cx(), src, dest / lang, op::unsafe);
 		return true;
 	};
 
