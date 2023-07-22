@@ -300,7 +300,7 @@ void translations::do_build_and_install()
 	const auto extensions = conf().path().install_extensions();
 	const projects ps(root);
 
-	op::create_directories(cx(), extensions / "base-translations");
+	op::create_directories(cx(), extensions / "mo2-translations");
 
 	// log all the warnings added while walking the projects
 	for (auto&& w : ps.warnings())
@@ -313,8 +313,10 @@ void translations::do_build_and_install()
 		if (!fs::is_directory(p))
 			continue;
 
-		project_to_extension[p.path().filename().string()] = p.path().filename();
-		project_to_extension[mob::replace_all(p.path().filename().string(), "-", "_")] = p.path().filename();
+		const auto name = mob::replace_all(p.path().filename().string(), "mo2-", "");
+
+		project_to_extension[name] = p.path().filename();
+		project_to_extension[mob::replace_all(name, "-", "_")] = p.path().filename();
 
 		const auto s_projects = conf().translation().get(p.path().filename().string(), "");
 		if (!s_projects.empty()) {
@@ -366,7 +368,7 @@ void translations::do_build_and_install()
 	parallel(v);
 
 	if (auto p=ps.find("organizer"))
-		copy_builtin_qt_translations(*p, extensions / "base-translations" / "translations");
+		copy_builtin_qt_translations(*p, extensions / "mo2-translations" / "translations");
 	else
 		cx().bail_out(context::generic, "organizer project not found");
 }
