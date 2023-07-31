@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "tasks.h"
+#include "nlohmann/json.hpp"
 #include "task_manager.h"
 #include "../core/env.h"
 #include "../utility/string.h"
@@ -290,6 +291,33 @@ void translations::do_fetch()
 	}
 }
 
+void generate_translations_metadata(
+	std::filesystem::path const& path,
+	std::vector<mob::tasks::translations::projects::lang> const& languages)
+{
+	using json = nlohmann::ordered_json;
+
+	json metadata;
+	{
+		std::ifstream ifs(path);
+		metadata = json::parse(ifs);
+	}
+
+	// fix version
+	json translations;
+	for (auto&& lang : languages) {
+		std::vector<std::string> files;
+		files.push_back("translations/" + lang.name + "/*.qm");
+		json jsonlang;
+		jsonlang["files"] = files;
+		translations[lang.name] = jsonlang;
+	}
+	metadata["content"]["translations"] = translations;
+
+	std::ofstream ofs(path);
+	ofs << metadata.dump(2);
+}
+
 void translations::do_build_and_install()
 {
 	// 1) build the list of projects, languages and .ts files
@@ -367,8 +395,12 @@ void translations::do_build_and_install()
 	// run all the functors in parallel
 	parallel(v);
 
-	if (auto p=ps.find("organizer"))
+	if (auto p = ps.find("organizer")) {
+		// the empty metadata for mo2-translations is copied from modorganizer and then filled
+		// here
+		generate_translations_metadata(extensions / "mo2-translations" / "metadata.json", p->langs);
 		copy_builtin_qt_translations(*p, extensions / "mo2-translations" / "translations");
+	}
 	else
 		cx().bail_out(context::generic, "organizer project not found");
 }
